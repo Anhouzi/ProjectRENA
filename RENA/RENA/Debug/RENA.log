@@ -1,0 +1,11 @@
+﻿  Leader.cpp
+c:\users\matt\documents\visual studio 2015\starting over\rena\rena\leader.cpp(214): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\matt\documents\visual studio 2015\starting over\rena\rena\leader.cpp(221): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\matt\documents\visual studio 2015\starting over\rena\rena\leader.cpp(228): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\matt\documents\visual studio 2015\starting over\rena\rena\leader.cpp(410): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\matt\documents\visual studio 2015\starting over\rena\rena\leader.cpp(412): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\matt\documents\visual studio 2015\starting over\rena\rena\leader.cpp(446): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+c:\users\matt\documents\visual studio 2015\starting over\rena\rena\leader.cpp(380): warning C4101: 'Survivors': unreferenced local variable
+c:\users\matt\documents\visual studio 2015\starting over\rena\rena\leader.cpp(485): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+  RENA.vcxproj -> C:\Users\Matt\Documents\Visual Studio 2015\Starting Over\RENA\Debug\RENA.exe
+  RENA.vcxproj -> C:\Users\Matt\Documents\Visual Studio 2015\Starting Over\RENA\Debug\RENA.pdb (Full PDB)
