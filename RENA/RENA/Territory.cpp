@@ -111,10 +111,51 @@ int Territory::Move()
 
 /* War() */
 
-int Territory::War()
+int Territory::War(Territory *Target, int SoldierInvestment)
 {
 	
+	int EnemySoldierInvestment;
+	//If the enemy has no soldiers to fight with, we win automatically.
 
+	EnemySoldierInvestment = std::min(Target->Gold, Target->Food);
+	EnemySoldierInvestment = std::min(EnemySoldierInvestment, Target->Soldiers);
+
+	float CombatPowerA = SoldierInvestment  * (1 + (Skill / 100.0)) * (.2 + .8 * (SoldierInvestment / Arms));
+	float CombatPowerB = EnemySoldierInvestment * (1 + (Target->Skill / 100.0)) *
+		(.2 + .8 * (EnemySoldierInvestment / Target->Arms));
+
+	CombatPowerB *= 1.25f;
+
+	if (EnemySoldierInvestment <= 0)
+	{
+		CombatPowerB = 1;
+	}
+
+	int Survivors = SoldierInvestment * (1 - (CombatPowerB / CombatPowerA));
+
+	Soldiers -= SoldierInvestment;
+	if (Soldiers < 0) { Soldiers = 0; }
+	Target->Soldiers = Target->Soldiers * (1 - (CombatPowerA / CombatPowerB));
+	if (Target->Soldiers < 0) { Target->Soldiers = 0; }
+
+	Arms = Arms * (1 - ((CombatPowerB / CombatPowerB) / 2));
+	if (Arms < 0) { Arms = 0; }
+	Target->Arms = Target->Arms * (1 - ((CombatPowerA / CombatPowerB) / 2));
+	if (Target->Arms < 0) { Target->Arms = 0; }
+
+	Gold -= SoldierInvestment;
+	Food -= SoldierInvestment;
+
+	Target->Gold -= EnemySoldierInvestment;
+	Target->Food -= EnemySoldierInvestment;
+	Target->Soldiers = Survivors;
+	Target->Skill = Skill;
+	//target->leader->SetOwner(leader);
+
+	std::cout << std::endl;
+	//View();
+
+	return 1;
 	//War simulation and resolution will go here. Probably utility functions.
 	std::cout << "Territory " << TerritoryNumber << " War -- " << std::endl;
 	return 0;
@@ -134,48 +175,7 @@ and the target territory, then do the following:
 
 int Territory::SimulateBattle(Territory* target, int soldierInvestment)
 {
-	int EnemySoldierInvestment;
-	//If the enemy has no soldiers to fight with, we win automatically.
-
-	EnemySoldierInvestment = std::min(target->Gold, target->Food);
-	EnemySoldierInvestment = std::min(EnemySoldierInvestment, target->Soldiers);
-
-	float CombatPowerA = soldierInvestment  * (1 + (Skill / 100)) * (.2 + .8 * (soldierInvestment / Arms));
-	float CombatPowerB = EnemySoldierInvestment * (1 + (target->Skill / 100)) *
-		(.2 + .8 * (EnemySoldierInvestment / target->Arms));
-
-	CombatPowerB *= 1.25f;
-
-	if (EnemySoldierInvestment <= 0)
-	{
-		CombatPowerB = 1;
-	}
-
-	int Survivors = soldierInvestment * (1 - (CombatPowerB / CombatPowerA));
-
-	Soldiers -= soldierInvestment;
-	if (Soldiers < 0) { Soldiers = 0; }
-	target->Soldiers = target->Soldiers * (1 - (CombatPowerA / CombatPowerB));
-	if (target->Soldiers < 0) { target->Soldiers = 0; }
-
-	Arms = Arms * (1 - ((CombatPowerB / CombatPowerB) / 2));
-	if (Arms < 0) { Arms = 0; }
-	target->Arms = target->Arms * (1 - ((CombatPowerA / CombatPowerB) / 2));
-	if (target->Arms < 0) { target->Arms = 0; }
-
-	Gold -= soldierInvestment;
-	Food -= soldierInvestment;
-
-	target->Gold -= EnemySoldierInvestment;
-	target->Food -= EnemySoldierInvestment;
-	target->Soldiers = Survivors;
-	target->Skill = Skill;
-	//target->leader->SetOwner(leader);
-
-	std::cout << std::endl;
-	//View();
-
-	return 1;
+	
 }
 
 /* Hire(int) - Subtract Gold from the Territory and add a proportional number of Soldiers.*/

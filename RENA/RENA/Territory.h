@@ -16,7 +16,6 @@ class Leader;
 class Territory
 {
 private:
-	int CalculateInvestment(Territory* target);
 	int SimulateBattle(Territory* target, int soldierInvestment);
 
 public:
@@ -29,7 +28,7 @@ public:
 	Territory();
 	//Military Actions
 	int Move();
-	int War();
+	int War(Territory *Target, int SoldierInvestment);
 	int Hire(int Investment);
 	int Train();
 	int View();
