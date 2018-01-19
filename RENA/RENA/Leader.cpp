@@ -43,38 +43,6 @@ Leader::Leader()
 
 }
 
-/*
-AI* Leader::GetOwner()
-{
-	return AiOwner;
-}
-*/
-
-
-//TODO: We might not need this anymore.
-/*
-void Leader::SetOwner(Leader *newOwner)
-{
-	AiOwner = newOwner->GetOwner();
-}
-*/
-
-/* TakeTurn() - Calls the proper TakeTurn() depending on the bool isAiPlayer. */
-/*
-void Leader::TakeTurn()
-{
-	std::cout << Player << " ";
-	if (isAiPlayer)
-	{
-		AiOwner->TakeTurn();
-	}
-	else
-	{
-		PlayerOwner->TakeTurn();
-	}
-}
-*/
-
 //////////////////////////////////////////////////
 //AI Class Methods
 //////////////////////////////////////////////////
