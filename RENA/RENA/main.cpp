@@ -69,7 +69,7 @@ int main()
 	newGame.PrintMap();
 	int rounds = 0;
 	
-	while (rounds < 5)
+	while (rounds < 75)
 	{
 		for (int i = 0; i < newGame.GetNumberOfLeaders(); ++i)
 		{

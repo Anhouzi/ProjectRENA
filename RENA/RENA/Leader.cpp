@@ -180,22 +180,25 @@ int AI::SafeAction(Territory *CurrentTerritory)
 		if (ActionCategory < Aggro)
 		{
 			int Action = floor(rand() % MilitaryActionCount);
-			std::cout << "Military Action Number: " << Action << std::endl;
+			//std::cout << "Military Action Number: " << Action << std::endl;
 			ActionResult = MilitaryAction(CurrentTerritory, Action);
+			//std::cout << "Action Complete" << std::endl;
 		}
 		//If the action category is above Aggro but below Aggro+Diplo, we will attempt a diplomatic action.
 		else if (ActionCategory < Aggro + Diplo)
 		{
 			int Action = floor(rand() % DiplomaticActionCount);
-			std::cout << "Diplomatic Action Number: " << Action << std::endl;
+			//std::cout << "Diplomatic Action Number: " << Action << std::endl;
 			ActionResult = DiplomaticAction(CurrentTerritory, Action);
+			//std::cout << "Action Complete" << std::endl;
 		}
 		//Else we will attempt an economic action.
 		else
 		{
 			int Action = floor(rand() % EconomicActionCount);
-			std::cout << "Economic Action Number: " << Action << std::endl;
+			//std::cout << "Economic Action Number: " << Action << std::endl;
 			ActionResult = EconomicAction(CurrentTerritory, Action);
+			//std::cout << "Action Complete" << std::endl;
 		}
 	}
 	return ActionResult;
@@ -221,10 +224,10 @@ int AI::MilitaryAction(Territory * CurrentTerritory, int Action)
 	{
 	case 0:
 		//ActionResult = CurrentTerritory->Move();
-		//break;
+		break;
 	case 1:
 		ActionResult = mWarAction(CurrentTerritory);
-		//break;
+		break;
 	case 2:
 		ActionResult = CurrentTerritory->Train();
 		break;
@@ -272,6 +275,7 @@ are sufficiently weak.
 TL:DR War command for the AI is in alpha and will be improved later.*/
 int AI::mWarAction(Territory * CurrentTerritory)
 {
+	//std::cout << "War Action Enter" << std::endl;
 	//Declaring an iterator for the adjacency list. 
 	std::vector<Territory *>::iterator Iterator = CurrentTerritory->Adjacency.begin();
 	Territory * Target = nullptr;
@@ -296,7 +300,7 @@ int AI::mWarAction(Territory * CurrentTerritory)
 		}
 
 		//If the target is owned by the attacker, we cannot attack. Next index.
-			//We are looking at the player number, not the leader specifically.
+			//We are looking at the player number, not the Leader object specifically.
 		if (Target->leader->Player == CurrentTerritory->leader->Player)
 		{
 			continue;
@@ -306,22 +310,21 @@ int AI::mWarAction(Territory * CurrentTerritory)
 		AdjacentIndices.push_back(IndexTracker);
 		//std::cout << "Targetting: " << target->TerritoryNumber << std::endl;
 	}
+	//std::cout << "War targets found..." << std::endl;
 	/*Select a random territory from the list of viable ones to attack. If that territory is too strong,
 	we will try and pick another one. If there are no Territories weak enough for us attack we will undo the action.*/
-	std::cout << "Getting new target: " << AdjacentIndices.size() << std::endl << std::endl;
 	while (AdjacentIndices.size() > 0 && ActionResult != 0)
 	{
 		TerritorySelection = rand() % AdjacentIndices.size();
 		Target = CurrentTerritory->Adjacency[AdjacentIndices[TerritorySelection]];
-		std::cout << "Targetting: " << Target->TerritoryNumber << std::endl;
 
 		ActionResult = CalculateInvestment(CurrentTerritory, Target);
 		if (ActionResult != 0)
 		{
 			AdjacentIndices.erase(AdjacentIndices.begin() + TerritorySelection);
 		}
-		std::cout << "Getting new target: " << AdjacentIndices.size() << std::endl << std::endl;
 	}
+	//std::cout << "War Action Exit" << std::endl;
 	return 0;
 }
 
@@ -344,9 +347,10 @@ Process:
 - The defending territory gets a 25% boost to combat power due to static defenses (implied value).*/
 int AI::CalculateInvestment(Territory *CurrentTerritory, Territory *Target)
 {
+	//std::cout << "Calculate Investment Enter" << std::endl;
 	//Variable Declarations
 	int SoldierInvestment, EnemySoldierInvestment, Survivors;
-	float CombatRatio;
+	float CombatRatio, ArmsRatio;
 
 	//To view the target, we spend 10 Gold.
 	CurrentTerritory->Gold -= 10;
@@ -373,11 +377,17 @@ int AI::CalculateInvestment(Territory *CurrentTerritory, Territory *Target)
 		std::cout << "No enemies to fight." << std::endl;
 		return 0;
 	}
-	//Calculate the combat power of the two territories. 
+
+	//std::cout << "War calculations commencing..." << std::endl;
+	//Calculate the combat power of the two territories.
+
+	ArmsRatio = std::min(1, CurrentTerritory->Arms / CurrentTerritory->Soldiers);
 	float CombatPowerA = SoldierInvestment  * (1 + (CurrentTerritory->Skill / 100.0)) * 
-						(.2 + .8 * (SoldierInvestment / CurrentTerritory->Arms));
+						(.2 + .8 * (ArmsRatio));
+
+	ArmsRatio = std::min(1, Target->Arms / Target->Soldiers);
 	float CombatPowerB = EnemySoldierInvestment * (1 + (Target->Skill / 100.0)) *
-						(.2 + .8 * (EnemySoldierInvestment / Target->Arms));
+						(.2 + .8 * (ArmsRatio));
 
 	CombatPowerB *= 1.25f;
 	std::cout << "Battle" << std::endl;
@@ -385,14 +395,10 @@ int AI::CalculateInvestment(Territory *CurrentTerritory, Territory *Target)
 	//View();
 
 	std::cout << std::endl;
-	std::cout << "SoldiersA: " << SoldierInvestment << std::endl;
-	std::cout << "SkillA: " << CurrentTerritory->Skill << std::endl;
-	std::cout << "ArmsA: " << CurrentTerritory->Arms << std::endl;
+	
 	std::cout << "cpA: " << CombatPowerA << std::endl;
 	std::cout << std::endl;
-	std::cout << "SoldiersB: " << Target->Soldiers << std::endl;
-	std::cout << "SkillB: " << Target->Skill << std::endl;
-	std::cout << "ArmsB: " << Target->Arms << std::endl;
+
 	std::cout << "cpB: " << CombatPowerB << std::endl;
 	std::cout << "Battle Ratio: " << CombatPowerA / CombatPowerB << std::endl;
 
@@ -406,7 +412,7 @@ int AI::CalculateInvestment(Territory *CurrentTerritory, Territory *Target)
 	}
 
 	CombatRatio = CombatPowerA / CombatPowerB;
-
+	//std::cout << "War calculations finished..." << std::endl;
 	//If we are more than 50% stronger than the enemy, we don't have to send in our full army to win. So we will try and cut back. 
 	if (CombatRatio > 1.5)
 	{
@@ -417,8 +423,9 @@ int AI::CalculateInvestment(Territory *CurrentTerritory, Territory *Target)
 	//If we don't have the resources to send out these soldiers, then the risk is too great and we will try something else. 
 	if (CurrentTerritory->Gold > SoldierInvestment && CurrentTerritory->Food > SoldierInvestment)
 	{
-		//CurrentTerritory->War(Target, SoldierInvestment);
-		std::cout << "Went to war." << std::endl;
+		//std::cout << "Going to war..." << std::endl;
+		CurrentTerritory->War(Target, SoldierInvestment);
+		//std::cout << "Went to war..." << std::endl;
 		return 0;
 	}
 	else
@@ -426,13 +433,16 @@ int AI::CalculateInvestment(Territory *CurrentTerritory, Territory *Target)
 		std::cout << "Not enough resources." << std::endl;
 		return 1;
 	}
+	//std::cout << "Calculate Investment End" << std::endl;
 	std::cout << std::endl;
+	
 }
 
 
 /* HireAction(Territory *) - Figure out how many soldiers we can safely hire. */
 int AI::mHireAction(Territory * CurrentTerritory)
 {
+	//std::cout << "Hire Action Enter" << std::endl;
 	// First set aside enough Gold to support our current Soldier count
 	int SpendableGold = CurrentTerritory->Gold - CurrentTerritory->Soldiers;
 	int RandomHireAmount, HireResult;
@@ -444,18 +454,16 @@ int AI::mHireAction(Territory * CurrentTerritory)
 	// For now, pick a random number between 0 - ((Gold/2)/3) and call the Territory's Hire function with the result.
 		// ((Gold/2)/3) is half the remaining gold value divided by the cost of each soldier. 
 	SpendableGold = (int)floor(SpendableGold / 3);
-
 	//If we don't give ourselves enough gold to spend, we'll try something else. 
-	if (SpendableGold <= 0)
+	if ((int)floor(SpendableGold / 2.0) <= 0)
 	{
 		return 1;
 	}
 	RandomHireAmount = floor(rand() % (int)floor(SpendableGold / 2.0) + (int)floor(SpendableGold / 2.0));
 
-	std::cout << "Hire Amount: " << RandomHireAmount << std::endl;
 
 	HireResult = CurrentTerritory->Hire(RandomHireAmount);
-
+	//std::cout << "Hire Action Exit" << std::endl;
 	return HireResult;
 }
 
@@ -543,17 +551,17 @@ int AI::eGrowAction(Territory * CurrentTerritory)
 	{
 		//TODO finish Trade action.
 		//Try an economic Give action.
-		if (eGiveAction(CurrentTerritory) != 0)
+		if (CurrentTerritory->Food - CurrentTerritory->Soldiers >= 10)
 		{
-			return 1;
+			eGiveAction(CurrentTerritory);
+			return 0;
 		}
 	}
-
 	//For now, select a random amount between Half the InvestmentAmount - InvestmentAmount and call the Territory's Build action.
 		//Update: Increased minimum since small numbers were painfully insignificant which came out to wasted turns overall.
 	RandomInvestmentAmount = rand() % (int) floor(InvestmentAmount/2.0) + (int) floor(InvestmentAmount/2.0);
 
-	std::cout << "Investment Amount: " << RandomInvestmentAmount << std::endl;
+	//std::cout << "Investment Amount: " << RandomInvestmentAmount << std::endl;
 
 	BuildResult = CurrentTerritory->Grow(RandomInvestmentAmount);
 	return BuildResult;
@@ -561,6 +569,7 @@ int AI::eGrowAction(Territory * CurrentTerritory)
 /* BuildAction(Territory *) - AI Method to decide how much Gold to spend on a Build action.*/
 int AI::eBuildAction(Territory * CurrentTerritory)
 {
+	//std::cout << "Build Action Enter" << std::endl;
 	//First subtract the number of Soldiers from the Gold amount so we don't weaken our military.
 	int InvestmentAmount = CurrentTerritory->Gold - CurrentTerritory->Soldiers;
 	int RandomInvestmentAmount, BuildResult;
@@ -570,16 +579,16 @@ int AI::eBuildAction(Territory * CurrentTerritory)
 	{
 		//TODO finish Trade action.
 		//Try an economic Give action.
-		if (eGiveAction(CurrentTerritory) != 0)
+		if (CurrentTerritory->Food - CurrentTerritory->Soldiers >= 10)
 		{
-			return 1;
+			eGiveAction(CurrentTerritory);
+			return 0;
 		}
 	}
-
 	//For now, select a random amount between 0 - InvestmentAmount and call the Territory's Build action.
 	RandomInvestmentAmount = rand() % (int)floor(InvestmentAmount / 2.0) + (int)floor(InvestmentAmount / 2.0);
 
-	std::cout << "Investment Amount: " << RandomInvestmentAmount << std::endl;
+	//std::cout << "Investment Amount: " << RandomInvestmentAmount << std::endl;
 
 	BuildResult = CurrentTerritory->Build(RandomInvestmentAmount);
 	return BuildResult;
@@ -596,17 +605,18 @@ int AI::eGiveAction(Territory * CurrentTerritory)
 	{
 		//TODO finish Trade action.
 		//Try a Build action.
-		if (eBuildAction(CurrentTerritory) != 0)
+
+		if (CurrentTerritory->Gold - CurrentTerritory->Soldiers >= 10)
 		{
-			return 1;
+			eBuildAction(CurrentTerritory);
+			return 0;
 		}
 		
 	}
-
 	//For now, select a random amount between 0 - InvestmentAmount and call the Territory's Build action.
 	RandomInvestmentAmount = rand() % (int)floor(InvestmentAmount / 2.0) + (int)floor(InvestmentAmount / 2.0);
 
-	std::cout << "Investment Amount: " << RandomInvestmentAmount << std::endl;
+	//std::cout << "Investment Amount: " << RandomInvestmentAmount << std::endl;
 
 	BuildResult = CurrentTerritory->Give(1, RandomInvestmentAmount);
 	return BuildResult;

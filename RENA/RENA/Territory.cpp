@@ -110,72 +110,113 @@ int Territory::Move()
 }
 
 /* War() */
+/*Calculates the outcome of Territory A investing X soldiers to attack Territory B. Even though the AI will
+do many of these calculations beforehand we still need to go through the motions for when Users declare war.
 
+ - The EnemySoldierInvestment is the smallest value between Gold, Food, and Soldiers since every battle needs to have
+these resources at a 1:1:1 ratio. 
+ - Combat Power = SoldierInvestment * (1 + (Skill / 100.0)) * (.2 + .8 * (SoldierInvestment / Arms))
+	- Solider Count and Skill scale with each other, and an army must have an equal number of Soldiers to Arms to fight
+	at full power. 
+ - If Territory A wins, we need to transfer control of Territory B to the owner of Territory A.*/
 int Territory::War(Territory *Target, int SoldierInvestment)
 {
-	
+	//std::cout << "At war." << std::endl;
+	bool isVictor = false;
 	int EnemySoldierInvestment;
-	//If the enemy has no soldiers to fight with, we win automatically.
-
+	float ArmsRatio;
+	
+	//We calculate how many soldiers the enemy can possibly invest based on their Gold and Food supplies. 
 	EnemySoldierInvestment = std::min(Target->Gold, Target->Food);
 	EnemySoldierInvestment = std::min(EnemySoldierInvestment, Target->Soldiers);
 
-	float CombatPowerA = SoldierInvestment  * (1 + (Skill / 100.0)) * (.2 + .8 * (SoldierInvestment / Arms));
-	float CombatPowerB = EnemySoldierInvestment * (1 + (Target->Skill / 100.0)) *
-		(.2 + .8 * (EnemySoldierInvestment / Target->Arms));
+	//Calculate the Combat Power of both territories.
+	ArmsRatio = std::min(1, Arms / Soldiers);
+	float CombatPowerA = SoldierInvestment  * (1 + (Skill / 100.0)) * (.2 + (.8 * ArmsRatio));
+
+	ArmsRatio = std::min(1, Target->Arms / Target->Soldiers);
+	float CombatPowerB = EnemySoldierInvestment * (1 + (Target->Skill / 100.0)) * (.2 + (.8 * ArmsRatio));
 
 	CombatPowerB *= 1.25f;
 
+	//If the Enemy cannot invest any defense, we set the combat power to 1 to represent civilian resistance.
 	if (EnemySoldierInvestment <= 0)
 	{
 		CombatPowerB = 1;
 	}
 
-	int Survivors = SoldierInvestment * (1 - (CombatPowerB / CombatPowerA));
+	if (CombatPowerA > CombatPowerB)
+	{
+		isVictor = true;
+	}
 
+	/* May wish to create an aftermath method to handle everything below this point. */
+
+	std::cout << "War Result: " << TerritoryNumber << " beats " << Target->TerritoryNumber << std::endl;
+	//We use a ratio of 1 - B/A to calculate the Survivors of the attacking side.
+		//If the ratio brings the survivor count below zero we will set it to zero.
+	int SurvivorsA = SoldierInvestment * (1 - (CombatPowerB / CombatPowerA));
+	SurvivorsA = std::max(0, SurvivorsA);
+
+	int SurvivorsB = EnemySoldierInvestment * (1 - CombatPowerA / CombatPowerB);
+	SurvivorsB = std::max(0, SurvivorsB);
+
+	//Win or lose we are subtracting our investment in the battle.
 	Soldiers -= SoldierInvestment;
-	if (Soldiers < 0) { Soldiers = 0; }
-	Target->Soldiers = Target->Soldiers * (1 - (CombatPowerA / CombatPowerB));
-	if (Target->Soldiers < 0) { Target->Soldiers = 0; }
-
-	Arms = Arms * (1 - ((CombatPowerB / CombatPowerB) / 2));
-	if (Arms < 0) { Arms = 0; }
-	Target->Arms = Target->Arms * (1 - ((CombatPowerA / CombatPowerB) / 2));
-	if (Target->Arms < 0) { Target->Arms = 0; }
-
 	Gold -= SoldierInvestment;
 	Food -= SoldierInvestment;
 
 	Target->Gold -= EnemySoldierInvestment;
 	Target->Food -= EnemySoldierInvestment;
-	Target->Soldiers = Survivors;
-	Target->Skill = Skill;
-	//target->leader->SetOwner(leader);
+	/*If we are the victor we need to:
+		- Set the Soldier count for the new territory to the the conflict's survivors.
+		- Split the Arms from the home territory to the new territory.
+		- Gain control of the new territory. */
+	//std::cout << "Aftermath Begin... " << std::endl;
+	if (isVictor)
+	{
+		 //SoldierInvestment should be validated to never exceed Soldier value.
+		Target->Soldiers = SurvivorsA;
+		Arms = Arms * (1 - ((CombatPowerB / CombatPowerB) / 2));
+		Target->Skill = Skill;
 
+		//std::cout << "Leader Management Begin... " << std::endl;
+		//Enemy leader management.
+		int j = 0;
+		Territory *TerritoryIter;
+		//We must find and remove the territory from the enemies Controlled Territory list. 
+
+		for (auto iter = Target->leader->ControlledTerritories.begin(); 
+			      iter != Target->leader->ControlledTerritories.end(); ++iter)
+		{
+			TerritoryIter = *iter;
+			if (TerritoryIter->TerritoryNumber == Target->TerritoryNumber)
+			{
+				//std::cout << "Removing territory... " << Target->TerritoryNumber << std::endl;
+				Target->leader->ControlledTerritories.erase(Target->leader->ControlledTerritories.begin() + j);
+				break;
+			}
+			j++;
+		}
+		Target->leader = leader;
+		leader->ControlledTerritories.push_back(Target);
+		//std::cout << "Leader Management End... " << std::endl;
+	}
+	/*If we aren't the victor we need to:
+		- Set the enemy's survivors
+		- Reduce Arms value on both sides since weapons are worn or broken by battle.*/
+	else
+	{
+		Target->Soldiers = Target->Soldiers - EnemySoldierInvestment + SurvivorsB;
+		Arms = (int)floor(Arms * .75);
+		Target->Arms = (int)floor(Target->Arms * .75);
+	}
+	//std::cout << "Aftermath Complete. " << std::endl;
 	std::cout << std::endl;
 	//View();
-
-	return 1;
-	//War simulation and resolution will go here. Probably utility functions.
 	std::cout << "Territory " << TerritoryNumber << " War -- " << std::endl;
+	//std::cout << "********************************************" << std::endl;
 	return 0;
-}
-
-
-/* SimulateBattle() */
-/* Utility function for the war command. Calculates the combat power of this Territory
-and the target territory, then do the following: 
-	Territory A Soldiers = sA * (1-(cpB/cpA))
-	Territory A Arms = aA * (1-((cpB/cpA) / 2)) 
-	Territory B Soldiers = sB * (1-(cpA/cpB))
-	Territory B Arms = aB * (1-((cpA/cpB) / 2))
-	
-	- A territory cannot have less than zero of any value. 
-	*/
-
-int Territory::SimulateBattle(Territory* target, int soldierInvestment)
-{
-	
 }
 
 /* Hire(int) - Subtract Gold from the Territory and add a proportional number of Soldiers.*/
@@ -196,14 +237,14 @@ int Territory::Hire(int NumberToHire)
 		//Skill = Skill*Soldiers + ((rand() % 30 + 40) * SoldierIncrease) / (Soldiers + SoldierIncrease)
 		//Averages out the skill between the current skill level and the incoming new soldiers.
 
-	std::cout << "Skill: " << Skill;
+	//std::cout << "Skill: " << Skill;
 	Skill = ((Skill * Soldiers) + ((rand() % 30 + 40) * SoldierIncrease)) / (Soldiers + SoldierIncrease);
-	std::cout << " -> " << Skill << std::endl;
+	//std::cout << " -> " << Skill << std::endl;
 	
 	//Soldier increase
-	std::cout << "Soldiers: " << Soldiers;
+	//std::cout << "Soldiers: " << Soldiers;
 	Soldiers += SoldierIncrease;
-	std::cout << " -> " << Soldiers << std::endl;
+	//std::cout << " -> " << Soldiers << std::endl;
 
 	
 
@@ -215,9 +256,9 @@ int Territory::Train()
 {
 	int SkillIncrease = rand() % 80 + 40;
 	std::cout << "Territory " << TerritoryNumber << " Train -- ";
-	std::cout << "Skill: " << Skill;
+	//std::cout << "Skill: " << Skill;
 	Skill += SkillIncrease;
-	std::cout << " -> " << Skill << std::endl;
+	//std::cout << " -> " << Skill << std::endl;
 	return 0;
 }
 
@@ -262,9 +303,9 @@ int Territory::Rest()
 	int HealthIncrease = rand() % 4 + 2;
 	
 	std::cout << "Territory " << TerritoryNumber << " Rest -- ";
-	std::cout << "Health " << leader->Health;
+	//std::cout << "Health " << leader->Health;
 	leader->Health += HealthIncrease;
-	std::cout << " -> " << leader->Health << std::endl;
+	//std::cout << " -> " << leader->Health << std::endl;
 
 	return 0;
 }
@@ -301,7 +342,7 @@ int Territory::Dam(int Investment)
 	int InfrastructureIncrease = (int) floor(Investment*.01);
 	Gold -= Investment;
 	std::cout << "Territory " << TerritoryNumber << " Dam -- ";
-	std::cout << "Infrastructure: " << Infrastructure;
+	//std::cout << "Infrastructure: " << Infrastructure;
 	Infrastructure += InfrastructureIncrease;
 
 	//Capping Infrastructure at 100.
@@ -309,7 +350,7 @@ int Territory::Dam(int Investment)
 	{
 		Infrastructure = 100;
 	}
-	std::cout << " -> " << Infrastructure << std::endl;
+	//std::cout << " -> " << Infrastructure << std::endl;
 	return 0;
 }
 
@@ -320,9 +361,9 @@ int Territory::Grow(int Investment)
 	int OutputIncrease = (int)floor(Investment*(50.0/Output));
 	Gold -= Investment;
 	std::cout << "Territory " << TerritoryNumber << " Grow -- ";
-	std::cout << "Output: " << Output;
+	//std::cout << "Output: " << Output;
 	Output += OutputIncrease;
-	std::cout << " -> " << Output << std::endl;
+	//std::cout << " -> " << Output << std::endl;
 	return 0;
 }
 
@@ -385,9 +426,9 @@ int Territory::Build(int Investment)
 	int TownIncrease = (int)floor(Investment*(50.0 / Town));
 	Gold -= Investment;
 	std::cout << "Territory " << TerritoryNumber << " Build -- ";
-	std::cout << "Town " << Town;
+	//std::cout << "Town " << Town;
 	Town += TownIncrease;
-	std::cout << " -> " << Town << std::endl;
+	//std::cout << " -> " << Town << std::endl;
 
 	return 0;
 }
@@ -407,13 +448,13 @@ int Territory::Give(int Command, int Input)
 		LoyaltyIncrease = (int)floor(Input*(15.0 / Loyalty));
 
 		Food -= Input; 
-		std::cout << "Wealth " << Wealth;
+		//std::cout << "Wealth " << Wealth;
 		Wealth += WealthIncrease;
-		std::cout << " -> " << Wealth << std::endl;
+		//std::cout << " -> " << Wealth << std::endl;
 
-		std::cout << "Loyalty " << Loyalty;
+		//std::cout << "Loyalty " << Loyalty;
 		Loyalty += LoyaltyIncrease;
-		std::cout << " -> " << Loyalty << std::endl;
+		//std::cout << " -> " << Loyalty << std::endl;
 		break;
 	}
 	
