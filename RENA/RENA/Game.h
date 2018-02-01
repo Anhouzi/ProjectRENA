@@ -7,6 +7,9 @@
 #include "Territory.h"
 
 using namespace std; 
+class Leader;
+class Territory;
+
 /* Game Functions */
 /* The game requires a series of functions in order to the game to progress.
 	- Pre-Game Setup: A series of prompts that lets the player set the settings/parameters of the game.
@@ -42,7 +45,7 @@ using namespace std;
 */
 class Game
 {
-	int NumberOfLeaders, GameDifficulty;
+	int NumberOfLeaders, NumberOfTerritories, GameDifficulty;
 	Territory ***Map;
 	//Leader *LeaderList;
 private:
@@ -56,6 +59,8 @@ public:
 	Territory *GetTerritory(int);
 	Territory ***GetMap();
 	int GetNumberOfLeaders();
+	int GetNumberOfTerritories();
+	int CheckState();
 
 };
  

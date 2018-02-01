@@ -68,10 +68,12 @@ int main()
 	
 	newGame.PrintMap();
 	int rounds = 0;
-	
-	while (rounds < 75)
+	int gameState = 1;
+	Territory * playerTerritory = newGame.GetTerritory(0);
+	playerTerritory->leader = new User(0, &newGame);
+	while (true)
 	{
-		for (int i = 0; i < newGame.GetNumberOfLeaders(); ++i)
+		for (int i = 0; i < newGame.GetNumberOfTerritories(); ++i)
 		{
 			//cout << "Test" << endl;
 			int TurnComplete = 1;
@@ -81,6 +83,12 @@ int main()
 				TurnComplete = territory->leader->TakeTurn(territory);
 			} while (TurnComplete != 0);
 			territory->TerritoryUpdate();
+		}
+		gameState = newGame.CheckState();
+		if (gameState < 1)
+		{
+			std::cout << "Game over!" << std::endl;
+			break;
 		}
 		cout << endl;
 		rounds++;

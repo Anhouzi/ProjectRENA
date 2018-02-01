@@ -235,7 +235,7 @@ void Game::GameOptions()
 
 	//TODO: Input validation.
 	cin >> input;
-	NumberOfLeaders = stoi(input, &sz);
+	NumberOfTerritories = NumberOfLeaders = stoi(input, &sz);
 	cout << endl;
 	//DEBUG: cout << NumberOfLeaders << endl;
 
@@ -284,6 +284,61 @@ Territory *** Game::GetMap()
 int Game::GetNumberOfLeaders()
 {
 	return NumberOfLeaders;
+}
+
+int Game::GetNumberOfTerritories()
+{
+	return NumberOfTerritories;
+}
+
+// We will check the state of the game and refresh the number of leaders that are still in the game.
+int Game::CheckState()
+{
+	vector<int> LeaderNumberList;
+	bool duplicate, hasPlayer = false;
+
+	//Iterate through each territory and check for unique leader numbers.
+	for (int i = 0; i < GetNumberOfTerritories(); ++i)
+	{
+		Territory *territory = GetTerritory(i);
+		duplicate = false;
+		
+		//If we find any player, we will continue to run the game.
+		if (territory->leader->isAiPlayer == false)
+		{
+			hasPlayer = true;
+		}
+
+		//For each territory, look through the Leader list and check if this will be a new or duplicate entry.
+		for (auto it = LeaderNumberList.begin(); it != LeaderNumberList.end(); it++)
+		{
+			int i = *it;
+			if (territory->leader->Player == i)
+			{
+				duplicate = true;
+				continue;
+			}
+		}
+		//If we don't flag that this territory's leader is a duplicate, we add it to the leader list.
+		if (!duplicate)
+		{
+			LeaderNumberList.push_back(territory->leader->Player);
+		}
+	}
+
+	NumberOfLeaders = LeaderNumberList.size();
+	if (hasPlayer == false)
+	{
+		std::cout << "No players remain." << std::endl;
+		return -1;
+	}
+	if (NumberOfLeaders == 1)
+	{
+		std::cout << "One leader remains." << std::endl;
+		return 0; 
+	}
+	return 1;
+
 }
 
 //Utility function that will run the leader creation process.

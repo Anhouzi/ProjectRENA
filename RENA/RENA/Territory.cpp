@@ -151,8 +151,16 @@ int Territory::War(Territory *Target, int SoldierInvestment)
 	}
 
 	/* May wish to create an aftermath method to handle everything below this point. */
+	if (isVictor)
+	{
+		std::cout << TerritoryNumber << " beats " << Target->TerritoryNumber << std::endl;
+	}
+	else
+	{
+		std::cout << Target->TerritoryNumber << " beats " << TerritoryNumber << std::endl;
+	}
 
-	std::cout << "War Result: " << TerritoryNumber << " beats " << Target->TerritoryNumber << std::endl;
+	//std::cout << "War Result: " << TerritoryNumber << " beats " << Target->TerritoryNumber << std::endl;
 	//We use a ratio of 1 - B/A to calculate the Survivors of the attacking side.
 		//If the ratio brings the survivor count below zero we will set it to zero.
 	int SurvivorsA = SoldierInvestment * (1 - (CombatPowerB / CombatPowerA));
@@ -199,6 +207,14 @@ int Territory::War(Territory *Target, int SoldierInvestment)
 			j++;
 		}
 		Target->leader = leader;
+		if (leader->isAiPlayer == false)
+		{
+			Target->leader->isAiPlayer = false;
+		}
+		else
+		{
+			Target->leader->isAiPlayer = true;
+		}
 		leader->ControlledTerritories.push_back(Target);
 		//std::cout << "Leader Management End... " << std::endl;
 	}
@@ -442,6 +458,9 @@ int Territory::Give(int Command, int Input)
 	switch (Command)
 	{
 	case 0: //Give to Soldiers
+		MoraleIncrease = (int)floor(Input*(10.0 / Morale));
+		Food -= Input;
+		Morale += MoraleIncrease;
 		break;
 	case 1: //Give to Citizens
 		WealthIncrease = (int)floor(Input*(10.0 / Wealth));

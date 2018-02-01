@@ -650,11 +650,510 @@ void AI::TerritoryStatistics(Territory *CurrentTerritory)
 
 
 //////////////////////////////////////////////////
-//Player Class Methods
+//User Class Methods
 //////////////////////////////////////////////////
+/* User Constructor */
+User::User(int player, Game *gameReference)
+{
+	Player = player;
+	Health = Drive = Luck = Charisma = Intelligence = 10;
+	//AiOwner = new AI(player);
+	isAiPlayer = false;
+	GameReference = gameReference;
+}
+
 int User::TakeTurn(Territory *CurrentTerritory)
 {
+	std::string Input, ActionSelection;
+	int ActionNumber, MenuState = 0;
+	bool ActionComplete = false;
 	std::cout << "Player Turn" << std::endl;
 
+	GameReference->PrintMap();
+	CurrentTerritory->DisplayState();
+
+	std::cout << std::endl;
+	MenuDisplay(0);
+	//We will loop menu screen until the user completes an action. 
+	do
+	{
+		//Collect input and set the action number to the input. 
+		std::cin >> Input;
+		ActionNumber = stoi(Input);
+
+		//We switch menus based on the action number given to us by the user.
+		/**/
+		
+		//std::cout << "Echo - " << Input << ": " << ActionSelection << std::endl;
+		//If we are at the main menu, we need to change the menu state and show the next menu
+		if (MenuState == 0)
+		{
+			MenuState = ActionNumber;
+			MenuDisplay(ActionNumber);
+		}
+		//If we are not in the main menu, we need to do the action.
+		else if (MenuState > 0)
+		{
+			switch (MenuState)
+			{
+			case 1: //Do specified military action.
+				ActionComplete = HandleActionMilitary(CurrentTerritory, ActionNumber);
+				break;
+			case 2: //Do specified diplomatic action.
+				ActionComplete = HandleActionDiplomatic(CurrentTerritory, ActionNumber);
+				break;
+			case 3: //Do specified economic action.
+				ActionComplete = HandleActionEconomic(CurrentTerritory, ActionNumber);
+				break;
+			default:
+				ActionSelection = "Blank";
+				std::cout << "Please enter a valid input." << std::endl;
+				break;
+			}
+			//If the user does not complete the action, bring us to the main menu.
+			if (ActionComplete == false)
+			{
+				MenuState = 0;
+				MenuDisplay(MenuState);
+			}
+		}
+	} while (!ActionComplete);
+
 	return 0;
+}
+
+/* ActionDisplay(int) - Prints a list of available actions to the player based on 
+the menu category the player has accessed. 
+	Categories: 
+		0: Main menu
+		1: Military Actions menu
+		2: Diplomatic Actions menu
+		3: Economic Actions menu
+Further depth will be handled by individual functions. */
+void User::MenuDisplay(int ActionCategory)
+{
+	std::cout << "Enter a number to navigate the menu." << std::endl;
+	switch (ActionCategory)
+	{
+	case 0: //Main Menu
+		std::cout << "1: Military Actions" << std::endl;
+		std::cout << "2: Diplomatic Actions" << std::endl;
+		std::cout << "3: Economic Actions" << std::endl;
+		break;
+	case 1: //Military Actions Menu
+		std::cout << "1: Move" << std::endl;
+		std::cout << "2: War" << std::endl;
+		std::cout << "3: Hire" << std::endl;
+		std::cout << "4: Train" << std::endl;
+		std::cout << "5: Arms" << std::endl;
+		std::cout << "6: Rations" << std::endl;
+		std::cout << "0: Back" << std::endl;
+		break;
+	case 2: //Diplomatic Actions Menu
+		std::cout << "1: Rest" << std::endl;
+		std::cout << "2: Bribe" << std::endl;
+		std::cout << "3: Pact" << std::endl;
+		//std::cout << "4: Grant" << std::endl;
+		std::cout << "0: Back" << std::endl;
+	case 3: //Economic Actions Menu
+		std::cout << "1: Tax" << std::endl;
+		std::cout << "2: Send" << std::endl;
+		std::cout << "3: Dam" << std::endl;
+		std::cout << "4: Grow" << std::endl;
+		std::cout << "5: Trade" << std::endl;
+		std::cout << "6: Build" << std::endl;
+		std::cout << "7: Celebrate" << std::endl;
+		std::cout << "0: Back" << std::endl;
+	default:
+		break;
+	}
+}
+
+bool User::HandleActionMilitary(Territory *CurrentTerritory, int ActionNumber)
+{
+	bool ActionCompletionStatus = false;
+	switch (ActionNumber)
+	{
+	case 1: // Move action
+		ActionCompletionStatus = MoveAction(CurrentTerritory);
+		break;
+
+	case 2: // War action
+		ActionCompletionStatus = WarAction(CurrentTerritory);
+		break;
+
+	case 3: // Hire action
+		ActionCompletionStatus = HireAction(CurrentTerritory);
+		break;
+
+	case 4: // Train action
+		ActionCompletionStatus = TrainAction(CurrentTerritory);
+		break;
+
+	case 5: // Arms action
+		ActionCompletionStatus = ArmsAction(CurrentTerritory);
+		break;
+
+	case 6: // Rations action
+		ActionCompletionStatus = RationsAction(CurrentTerritory);
+		break;
+
+	default: // Any other answer will bring us back to the main menu.
+		break;
+	}
+	return ActionCompletionStatus;
+}
+//TODO
+bool User::MoveAction(Territory *CurrentTerritory)
+{
+	auto iter = ControlledTerritories.begin();
+	Territory *currentTerritory;
+	int ViableTerritoryCount = 0;
+
+	//We can move troops to any territory we own, so we will display all the territories we own.
+	if (ControlledTerritories.size() <= 1)
+	{
+		std::cout << "You only control one territory!" << std::endl;
+		return false;
+	}
+
+	while (iter != ControlledTerritories.end())
+	{
+		currentTerritory = *iter;
+		std::cout << currentTerritory->TerritoryNumber << "  ";
+		ViableTerritoryCount++;
+	}
+	
+	std::cout << std::endl;
+	std::cout << "Which territory are you moving troops to?" << std::endl;
+	return true;
+}
+//TODO
+bool User::WarAction(Territory *CurrentTerritory)
+{
+	auto iter = CurrentTerritory->Adjacency.begin();
+	Territory *AdjacentTerritory;
+	int ViableEnemyCount = 0, TerritoryTargetNumber, SoldierCommitment;
+	vector<Territory *> EnemyTerritoryList;
+	Territory *TerritoryTarget = nullptr;
+	std::string Input;
+	bool isInputValid = false;
+
+	std::cout << std::endl << "War" << std::endl;
+	//Print out all of the adjacent territories.
+	while (iter != CurrentTerritory->Adjacency.end())
+	{
+		AdjacentTerritory = *iter;
+		if (AdjacentTerritory != nullptr && AdjacentTerritory->leader->Player != Player)
+		//if (AdjacentTerritory != nullptr)
+		{
+			EnemyTerritoryList.push_back(AdjacentTerritory);
+			std::cout << AdjacentTerritory->TerritoryNumber << "  ";
+			ViableEnemyCount++;
+		}
+		iter++;
+	}
+	if (ViableEnemyCount == 0)
+	{
+		std::cout << "No viable enemies to attack from this territory." << std::endl;
+		return false;
+	}
+	std::cout << std::endl;
+	std::cout << "Which territory are you attacking?" << std::endl;
+
+	//Check if the input from the player matches one of the Options.
+	do
+	{
+		std::cin >> Input;
+		TerritoryTargetNumber = stoi(Input);
+		for (auto it = EnemyTerritoryList.begin(); it != EnemyTerritoryList.end(); it++)
+		{
+			Territory *Territory = *it;
+			if (Territory->TerritoryNumber == TerritoryTargetNumber)
+			{
+				TerritoryTarget = Territory;
+				isInputValid = true;
+				break;
+			}
+		}
+	} while (!isInputValid);
+
+	if (TerritoryTarget == nullptr)
+	{
+		std::cout << "Error, no target selected." << std::endl;
+		return false;
+	}
+
+	SoldierCommitment = std::min(CurrentTerritory->Food, CurrentTerritory->Gold);
+	SoldierCommitment = std::min(SoldierCommitment, CurrentTerritory->Soldiers);
+	std::cout << std::endl;
+	std::cout << "How many troops are you sending?" << std::endl;
+	std::cout << "0 - " << SoldierCommitment << std::endl;
+	std::cin >> Input;
+	SoldierCommitment = stoi(Input);
+
+	CurrentTerritory->War(TerritoryTarget, SoldierCommitment);
+	return true;
+}
+bool User::HireAction(Territory *CurrentTerritory)
+{
+	string Input; 
+	int HireAmount;
+	std::cout << "How many soldiers are you hiring?" << std::endl;
+	std::cout << "\t0 - " << (CurrentTerritory->Gold / 3) << std::endl;
+
+	do
+	{
+		std::cin >> Input;
+		HireAmount = stoi(Input);
+		if (HireAmount > CurrentTerritory->Gold / 3)
+		{
+			std::cout << "Not enough gold." << std::endl;
+		}
+	} while (HireAmount > CurrentTerritory->Gold / 3);
+	
+	if (HireAmount == 0)
+	{
+		return false;
+	}
+	CurrentTerritory->Hire(HireAmount);
+	return true;
+}
+bool User::TrainAction(Territory *CurrentTerritory)
+{
+	CurrentTerritory->Train();
+	return true;
+}
+bool User::ArmsAction(Territory *CurrentTerritory)
+{
+	string Input;
+	int PurchaseAmount;
+	std::cout << "How many arms are you buying?" << std::endl;
+	std::cout << "\t0 - " << (CurrentTerritory->Gold / 5) << std::endl;
+
+	do
+	{
+		std::cin >> Input;
+		PurchaseAmount = stoi(Input);
+		if (PurchaseAmount > CurrentTerritory->Gold / 5)
+		{
+			std::cout << "Not enough gold." << std::endl;
+		}
+	} while (PurchaseAmount > CurrentTerritory->Gold / 5);
+
+	if (PurchaseAmount == 0)
+	{
+		return false;
+	}
+	CurrentTerritory->Trade(2, PurchaseAmount);
+	return true;
+}
+bool User::RationsAction(Territory *CurrentTerritory)
+{
+	string Input;
+	int RationAmount;
+	std::cout << "How many rations are you giving your soldiers?" << std::endl;
+	std::cout << "\t0 - " << (CurrentTerritory->Food) << std::endl;
+
+	do
+	{
+		std::cin >> Input;
+		RationAmount = stoi(Input);
+		if (RationAmount > CurrentTerritory->Food)
+		{
+			std::cout << "Not enough gold." << std::endl;
+		}
+	} while (RationAmount > CurrentTerritory->Food);
+
+	CurrentTerritory->Give(0, RationAmount);
+	return false;
+}
+
+//TODO
+bool User::HandleActionDiplomatic(Territory *CurrentTerritory, int ActionNumber)
+{
+	return false;
+}
+
+bool User::HandleActionEconomic(Territory *CurrentTerritory, int ActionNumber)
+{
+	bool ActionCompletionStatus = false;
+	switch (ActionNumber)
+	{
+	case 1: // Move action
+		ActionCompletionStatus = TaxAction(CurrentTerritory);
+		break;
+
+	case 2: // War action
+		ActionCompletionStatus = SendAction(CurrentTerritory);
+		break;
+
+	case 3: // Hire action
+		ActionCompletionStatus = DamAction(CurrentTerritory);
+		break;
+
+	case 4: // Train action
+		ActionCompletionStatus = GrowAction(CurrentTerritory);
+		break;
+
+	case 5: // Arms action
+		ActionCompletionStatus = TradeAction(CurrentTerritory);
+		break;
+
+	case 6: // Rations action
+		ActionCompletionStatus = BuildAction(CurrentTerritory);
+		break;
+
+	case 7: // Rations action
+		ActionCompletionStatus = CelebrateAction(CurrentTerritory);
+		break;
+	default: // Any other answer will bring us back to the main menu.
+		break;
+	}
+	return ActionCompletionStatus;
+}
+
+bool User::TaxAction(Territory *CurrentTerritory)
+{
+	string Input;
+	int TaxInput;
+	float NewTax;
+	std::cout << "What will be the new tax rate?   0 - 100" << std::endl;
+	std::cout << "Current: " << CurrentTerritory->TaxRate*100 << std::endl;
+
+	do
+	{
+		std::cin >> Input;
+		TaxInput = stoi(Input);
+		if (TaxInput > 100 || TaxInput < 0)
+		{
+			std::cout << "Outside of range." << std::endl;
+		}
+	} while (TaxInput > 100 || TaxInput < 0);
+	NewTax = TaxInput / 100.0;
+
+	CurrentTerritory->Tax(NewTax);
+	return true;
+}
+//TODO
+bool User::SendAction(Territory *CurrentTerritory)
+{
+	string Input;
+	int RationAmount;
+	std::cout << "How many rations are you giving your soldiers?" << std::endl;
+	std::cout << "\t0 - " << (CurrentTerritory->Food) << std::endl;
+
+	do
+	{
+		std::cin >> Input;
+		RationAmount = stoi(Input);
+		if (RationAmount > CurrentTerritory->Food)
+		{
+			std::cout << "Not enough gold." << std::endl;
+		}
+	} while (RationAmount > CurrentTerritory->Food);
+
+	CurrentTerritory->Give(0, RationAmount);
+	return true;
+}
+bool User::DamAction(Territory *CurrentTerritory)
+{
+	string Input;
+	int DamInvestment;
+	std::cout << "How much will you spend on infrastructure construction?" << std::endl;
+	std::cout << "\t0 - " << (CurrentTerritory->Gold) << std::endl;
+
+	do
+	{
+		std::cin >> Input;
+		DamInvestment = stoi(Input);
+		if (DamInvestment > CurrentTerritory->Gold)
+		{
+			std::cout << "Not enough gold." << std::endl;
+		}
+	} while (DamInvestment > CurrentTerritory->Gold);
+
+	CurrentTerritory->Dam(DamInvestment);
+	return true;
+}
+bool User::GrowAction(Territory *CurrentTerritory)
+{
+	string Input;
+	int OutputInvestment;
+	std::cout << "How much will you spend on food output production?" << std::endl;
+	std::cout << "\t0 - " << (CurrentTerritory->Gold) << std::endl;
+
+	do
+	{
+		std::cin >> Input;
+		OutputInvestment = stoi(Input);
+		if (OutputInvestment > CurrentTerritory->Gold)
+		{
+			std::cout << "Not enough gold." << std::endl;
+		}
+	} while (OutputInvestment > CurrentTerritory->Gold);
+
+	CurrentTerritory->Grow(OutputInvestment);
+	return false;
+}
+//TODO
+bool User::TradeAction(Territory *CurrentTerritory)
+{
+	string Input;
+	int RationAmount;
+	std::cout << "How many rations are you giving your soldiers?" << std::endl;
+	std::cout << "\t0 - " << (CurrentTerritory->Food) << std::endl;
+
+	do
+	{
+		std::cin >> Input;
+		RationAmount = stoi(Input);
+		if (RationAmount > CurrentTerritory->Food)
+		{
+			std::cout << "Not enough gold." << std::endl;
+		}
+	} while (RationAmount > CurrentTerritory->Food);
+
+	CurrentTerritory->Give(0, RationAmount);
+	return true;
+}
+bool User::BuildAction(Territory *CurrentTerritory)
+{
+	string Input;
+	int TownInvestment;
+	std::cout << "How much will you spend on town construction?" << std::endl;
+	std::cout << "\t0 - " << (CurrentTerritory->Gold) << std::endl;
+
+	do
+	{
+		std::cin >> Input;
+		TownInvestment = stoi(Input);
+		if (TownInvestment > CurrentTerritory->Gold)
+		{
+			std::cout << "Not enough gold." << std::endl;
+		}
+	} while (TownInvestment > CurrentTerritory->Gold);
+
+	CurrentTerritory->Build(TownInvestment);
+	return true;
+}
+bool User::CelebrateAction(Territory *CurrentTerritory)
+{
+	string Input;
+	int FeastAmount;
+	std::cout << "How much food will you provide for the celebration?" << std::endl;
+	std::cout << "\t0 - " << (CurrentTerritory->Food) << std::endl;
+
+	do
+	{
+		std::cin >> Input;
+		FeastAmount = stoi(Input);
+		if (FeastAmount > CurrentTerritory->Food)
+		{
+			std::cout << "Not enough gold." << std::endl;
+		}
+	} while (FeastAmount > CurrentTerritory->Food);
+
+	CurrentTerritory->Give(1, FeastAmount);
+	return true;
 }

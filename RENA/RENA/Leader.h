@@ -3,6 +3,7 @@
 #include <iostream>
 //#include <algorithm>
 #include "Territory.h"
+#include "Game.h"
 
 
 /* Leader Object */
@@ -23,7 +24,7 @@
 		- Allies: List of this players allies and thus cannot be attacked.
 */
 class Territory; //Forward declaration for Territory functionality.
-
+class Game;
 				 
 // We are changing leader into a virtual class for AI and User it will only contain variables
 // and methods that all AIs and Users should have.
@@ -86,8 +87,37 @@ public:
 
 class User : public Leader
 {
+	Game *GameReference;
 public:
+	
+	User(int player, Game *gameReference);
 	int TakeTurn(Territory *CurrentTerritory);
+
+	void MenuDisplay(int ActionCategory);
+	bool HandleActionMilitary(Territory *CurrentTerritory, int ActionNumber);
+	bool MoveAction(Territory *CurrentTerritory);
+	bool WarAction(Territory *CurrentTerritory);
+	bool HireAction(Territory *CurrentTerritory);
+	bool TrainAction(Territory *CurrentTerritory);
+	bool ArmsAction(Territory *CurrentTerritory);
+	bool RationsAction(Territory *CurrentTerritory);
+	bool HandleActionDiplomatic(Territory *CurrentTerritory, int ActionNumber);
+	bool HandleActionEconomic(Territory *CurrentTerritory, int ActionNumber);
+
+	bool TaxAction(Territory * CurrentTerritory);
+
+	bool SendAction(Territory * CurrentTerritory);
+
+	bool DamAction(Territory * CurrentTerritory);
+
+	bool GrowAction(Territory * CurrentTerritory);
+
+	bool TradeAction(Territory * CurrentTerritory);
+
+	bool BuildAction(Territory * CurrentTerritory);
+
+	bool CelebrateAction(Territory * CurrentTerritory);
+
 };
 
 
