@@ -972,7 +972,46 @@ bool User::RationsAction(Territory *CurrentTerritory)
 //TODO
 bool User::HandleActionDiplomatic(Territory *CurrentTerritory, int ActionNumber)
 {
-	return false;
+	bool ActionCompletionStatus = false;
+	switch (ActionNumber)
+	{
+	case 1: // Move action
+		ActionCompletionStatus = RestAction(CurrentTerritory);
+		break;
+
+	case 2: // War action
+		ActionCompletionStatus = SendAction(CurrentTerritory);
+		break;
+
+	case 3: // Hire action
+		ActionCompletionStatus = DamAction(CurrentTerritory);
+		break;
+
+	case 4: // Train action
+		ActionCompletionStatus = GrowAction(CurrentTerritory);
+		break;
+
+	case 5: // Arms action
+		ActionCompletionStatus = TradeAction(CurrentTerritory);
+		break;
+
+	case 6: // Rations action
+		ActionCompletionStatus = BuildAction(CurrentTerritory);
+		break;
+
+	case 7: // Rations action
+		ActionCompletionStatus = CelebrateAction(CurrentTerritory);
+		break;
+	default: // Any other answer will bring us back to the main menu.
+		break;
+	}
+	return ActionCompletionStatus;
+}
+
+bool User::RestAction(Territory *CurrentTerritory)
+{
+	CurrentTerritory->Rest();
+	return true;
 }
 
 bool User::HandleActionEconomic(Territory *CurrentTerritory, int ActionNumber)
@@ -1094,27 +1133,59 @@ bool User::GrowAction(Territory *CurrentTerritory)
 	} while (OutputInvestment > CurrentTerritory->Gold);
 
 	CurrentTerritory->Grow(OutputInvestment);
-	return false;
+	return true;
 }
 //TODO
 bool User::TradeAction(Territory *CurrentTerritory)
 {
 	string Input;
-	int RationAmount;
-	std::cout << "How many rations are you giving your soldiers?" << std::endl;
-	std::cout << "\t0 - " << (CurrentTerritory->Food) << std::endl;
+	int TradeChoice, TradeAmount, AmountCap;
+	std::cout << "1: Buy Food with Gold" << std::endl;
+	std::cout << "2: Sell Food for Gold" << std::endl;
+	std::cout << "0: Back" << std::endl;
 
+	//Loop to handle choosing Trade action.
 	do
 	{
 		std::cin >> Input;
-		RationAmount = stoi(Input);
-		if (RationAmount > CurrentTerritory->Food)
-		{
-			std::cout << "Not enough gold." << std::endl;
-		}
-	} while (RationAmount > CurrentTerritory->Food);
+		TradeChoice = stoi(Input);
 
-	CurrentTerritory->Give(0, RationAmount);
+		if (TradeChoice < 3 && TradeChoice >= 0)
+		{
+			std::cout << "Not a valid choice." << std::endl;
+		}
+	} while (TradeChoice < 3 && TradeChoice >= 0);
+	switch (TradeChoice)
+	{
+	case 1:
+		std::cout << "How much Gold are you spending on Food?" << std::endl;
+		std::cout << "0 - " << CurrentTerritory->Gold << std::endl;
+		AmountCap = CurrentTerritory->Gold;
+		TradeChoice--;
+		break;
+	case 2:
+		std::cout << "How much Food are you selling?" << std::endl;
+		std::cout << "0 - " << CurrentTerritory->Food << std::endl;
+		AmountCap = CurrentTerritory->Food;
+		TradeChoice--;
+		break;
+	default:
+		return false;
+	}
+	
+	//Loop to handle enacting the Trade action.
+	do
+	{
+		std::cin >> Input;
+		TradeAmount = stoi(Input);
+
+		if (TradeAmount > AmountCap)
+		{
+			std::cout << "Not a valid amount." << std::endl;
+		}
+	} while (TradeAmount > AmountCap);
+
+	CurrentTerritory->Trade(TradeChoice, TradeAmount);
 	return true;
 }
 bool User::BuildAction(Territory *CurrentTerritory)

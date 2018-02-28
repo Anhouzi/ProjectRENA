@@ -102,6 +102,7 @@ public:
 	bool ArmsAction(Territory *CurrentTerritory);
 	bool RationsAction(Territory *CurrentTerritory);
 	bool HandleActionDiplomatic(Territory *CurrentTerritory, int ActionNumber);
+	bool RestAction(Territory * CurrentTerritory);
 	bool HandleActionEconomic(Territory *CurrentTerritory, int ActionNumber);
 
 	bool TaxAction(Territory * CurrentTerritory);
