@@ -15,9 +15,6 @@ class Leader;
 //Forward Declaration Resource: https://stackoverflow.com/questions/4757565/what-are-forward-declarations-in-c
 class Territory
 {
-private:
-	int SimulateBattle(Territory* target, int soldierInvestment);
-
 public:
 	bool isAI; 
 	Leader *leader; 

@@ -46,15 +46,9 @@ public:
 	std::vector<Territory *> ControlledTerritories;
 
 	Leader();
-	//Leader(int player);
-	//AI* GetOwner();
-	//void SetOwner(Leader*);
 
 	//Virtual Functions that all children MUST define.
 	virtual int TakeTurn(Territory *CurrentTerritory) = 0;
-
-	//Leader Functions
-
 };
 
 class AI : public Leader

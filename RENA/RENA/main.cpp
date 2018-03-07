@@ -64,7 +64,6 @@ int main()
 	Game newGame;
 	newGame.GameOptions();
 	newGame.GameSetup();
-	//newGame.CreateMap();
 	
 	newGame.PrintMap();
 	int rounds = 0;
@@ -75,7 +74,6 @@ int main()
 	{
 		for (int i = 0; i < newGame.GetNumberOfTerritories(); ++i)
 		{
-			//cout << "Test" << endl;
 			int TurnComplete = 1;
 			Territory *territory = newGame.GetTerritory(i);
 			do

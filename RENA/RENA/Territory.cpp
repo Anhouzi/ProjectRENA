@@ -160,7 +160,6 @@ int Territory::War(Territory *Target, int SoldierInvestment)
 		std::cout << Target->TerritoryNumber << " beats " << TerritoryNumber << std::endl;
 	}
 
-	//std::cout << "War Result: " << TerritoryNumber << " beats " << Target->TerritoryNumber << std::endl;
 	//We use a ratio of 1 - B/A to calculate the Survivors of the attacking side.
 		//If the ratio brings the survivor count below zero we will set it to zero.
 	int SurvivorsA = SoldierInvestment * (1 - (CombatPowerB / CombatPowerA));
@@ -180,7 +179,7 @@ int Territory::War(Territory *Target, int SoldierInvestment)
 		- Set the Soldier count for the new territory to the the conflict's survivors.
 		- Split the Arms from the home territory to the new territory.
 		- Gain control of the new territory. */
-	//std::cout << "Aftermath Begin... " << std::endl;
+
 	if (isVictor)
 	{
 		 //SoldierInvestment should be validated to never exceed Soldier value.
@@ -188,7 +187,6 @@ int Territory::War(Territory *Target, int SoldierInvestment)
 		Arms = Arms * (1 - ((CombatPowerB / CombatPowerB) / 2));
 		Target->Skill = Skill;
 
-		//std::cout << "Leader Management Begin... " << std::endl;
 		//Enemy leader management.
 		int j = 0;
 		Territory *TerritoryIter;
@@ -200,7 +198,6 @@ int Territory::War(Territory *Target, int SoldierInvestment)
 			TerritoryIter = *iter;
 			if (TerritoryIter->TerritoryNumber == Target->TerritoryNumber)
 			{
-				//std::cout << "Removing territory... " << Target->TerritoryNumber << std::endl;
 				Target->leader->ControlledTerritories.erase(Target->leader->ControlledTerritories.begin() + j);
 				break;
 			}
@@ -216,7 +213,6 @@ int Territory::War(Territory *Target, int SoldierInvestment)
 			Target->leader->isAiPlayer = true;
 		}
 		leader->ControlledTerritories.push_back(Target);
-		//std::cout << "Leader Management End... " << std::endl;
 	}
 	/*If we aren't the victor we need to:
 		- Set the enemy's survivors
@@ -227,11 +223,8 @@ int Territory::War(Territory *Target, int SoldierInvestment)
 		Arms = (int)floor(Arms * .75);
 		Target->Arms = (int)floor(Target->Arms * .75);
 	}
-	//std::cout << "Aftermath Complete. " << std::endl;
 	std::cout << std::endl;
-	//View();
 	std::cout << "Territory " << TerritoryNumber << " War -- " << std::endl;
-	//std::cout << "********************************************" << std::endl;
 	return 0;
 }
 
@@ -253,14 +246,10 @@ int Territory::Hire(int NumberToHire)
 		//Skill = Skill*Soldiers + ((rand() % 30 + 40) * SoldierIncrease) / (Soldiers + SoldierIncrease)
 		//Averages out the skill between the current skill level and the incoming new soldiers.
 
-	//std::cout << "Skill: " << Skill;
 	Skill = ((Skill * Soldiers) + ((rand() % 30 + 40) * SoldierIncrease)) / (Soldiers + SoldierIncrease);
-	//std::cout << " -> " << Skill << std::endl;
 	
 	//Soldier increase
-	//std::cout << "Soldiers: " << Soldiers;
 	Soldiers += SoldierIncrease;
-	//std::cout << " -> " << Soldiers << std::endl;
 
 	
 
@@ -272,9 +261,7 @@ int Territory::Train()
 {
 	int SkillIncrease = rand() % 80 + 40;
 	std::cout << "Territory " << TerritoryNumber << " Train -- ";
-	//std::cout << "Skill: " << Skill;
 	Skill += SkillIncrease;
-	//std::cout << " -> " << Skill << std::endl;
 	return 0;
 }
 
@@ -467,13 +454,9 @@ int Territory::Give(int Command, int Input)
 		LoyaltyIncrease = (int)floor(Input*(15.0 / Loyalty));
 
 		Food -= Input; 
-		//std::cout << "Wealth " << Wealth;
 		Wealth += WealthIncrease;
-		//std::cout << " -> " << Wealth << std::endl;
 
-		//std::cout << "Loyalty " << Loyalty;
 		Loyalty += LoyaltyIncrease;
-		//std::cout << " -> " << Loyalty << std::endl;
 		break;
 	}
 	
@@ -514,31 +497,15 @@ void Territory::TerritoryUpdate()
 	//Soldier Upkeep
 	Gold -= (int) ceil(Soldiers * SoldierUpkeep);
 	Food -= (int) ceil(Soldiers * SoldierUpkeep);
-	//std::cout << "Soldier Upkeep: " << Soldiers * SoldierUpkeep << std::endl;
 	//Town Upkeep
 	Food -= (int) ceil(Town * TownUpkeep);
 
 	//Natural Upkeep
-	//Gold *= (Infrastructure / 100);
-	//Food *= (Infrastructure / 100);
 	leader->Health--;
 
 	/* Income */
 	Gold += (int) ceil(Town * ((Wealth / 100) * TaxRate));
 	Food += Output;
-	//std::cout << "Town: " << Town << " Wealth: " << Wealth << " Tax Rate: " << TaxRate << std::endl;
-	//std::cout << "Gold Income: " << (int) ceil(Town * (Wealth/100) * TaxRate) << std::endl;
-	//View();
-	/*
-	if (Gold < 0)
-	{
-		std::cout << "Territory: " << TerritoryNumber << " is in debt." << std::endl;
-	}
-	if (Food < 0)
-	{
-		std::cout << "Territory: " << TerritoryNumber << " is starving." << std::endl;
-	}
-	*/
 }
 
 

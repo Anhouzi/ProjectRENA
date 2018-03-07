@@ -28,9 +28,6 @@ void Game::CreateMap()
 	int rows = (int)RowsD;
 	int cols = (int)ColsD; //Using rows instead of reusing sqrt(NumberOfLeaders) gave better results.
 
-	//int TwoDee[rows][cols];
-	//Territory Map2[rows][cols];
-	//cout << "Rows: " << rows << " Cols: " << cols << endl;
 	//Initialize map to an array of Territory pointers.
 	Map = new Territory**[rows];
 	for (int i = 0; i < rows; i++)
@@ -49,9 +46,6 @@ void Game::CreateMap()
 				//Setup a new leader for the territory.
 				Current->leader = new AI(i * cols + j);
 				Current->leader->ControlledTerritories.push_back(Current);
-				//cout << Current->TerritoryNumber << endl;
-
-				
 			}
 			else
 			{
@@ -61,10 +55,7 @@ void Game::CreateMap()
 		//Set the row with all the columns.
 		Map[i] = row;
 	}
-	//cout << "Map test: " << Map[0][0]->TerritoryNumber << endl;
-	//std::cout << "Connecting Map" << std::endl;
 	ConnectMap(rows, cols);
-	//std::cout << "Map Connections finished" << std::endl;
 }
 
 //Utility function for CreateMap() to establish the adjacency lists for all the territories.
@@ -87,25 +78,8 @@ void Game::ConnectMap(int rows, int cols)
 			
 			if ((i*cols + j) >= NumberOfLeaders)
 			{
-				//Map[i][j] = NULL;
 				break;
 			}
-			
-			
-			//Initialize the adjacency list. Since no territory can have
-			//more than four adjacent territories, an array of 4 is all that is needed.
-			/* Adjacency 
-			- [0]: Northern Territory (i - 1)
-			- [1]: Eastern Territory  (j + 1)
-			- [2]: Southern Territory (i + 1)
-			- [3]: Western Territory  (j - 1)
-			- If any value is set to NULL there is no territory adjacent to it in that direction.
-			*/
-
-			//Map[i][j].Adjacency = new Territory*[4];	
-
-			//Validate the slot above this one. 
-			//If there is a row above this one...
 			
 			if ((i - 1) >= 0)
 			{
@@ -171,18 +145,6 @@ void Game::ConnectMap(int rows, int cols)
 			{
 				Map[i][j]->Adjacency.push_back(nullptr);
 			}
-			//DEBUG Loop to check the adjacency lists. 
-			//cout << Map[i][j]->Adjacency.size() << endl;
-			/*
-			for (int k = 0; k < Map[i][j]->Adjacency.size(); ++k)
-			{
-				if (Map[i][j]->Adjacency[k] != nullptr)
-				{
-					cout << "Territory " << Map[i][j]->Adjacency[k]->TerritoryNumber << endl;
-				}
-			}
-			cout << endl;
-			*/
 		}
 	}
 }
@@ -233,21 +195,15 @@ void Game::GameOptions()
 	cout << "Welcome to RENA!" << endl;
 	cout << "Enter the number of Civilizations in the game." << endl;
 
-	//TODO: Input validation.
 	cin >> input;
 	NumberOfTerritories = NumberOfLeaders = stoi(input, &sz);
 	cout << endl;
-	//DEBUG: cout << NumberOfLeaders << endl;
 
 	cout << "Enter the game difficulty (1-5)." << endl;
 
 	cin >> input;
 	GameDifficulty = stoi(input, &sz);
-	cout << endl;
-	//DEBUG: cout << GameDifficulty << endl;
-
-	//LeaderCreation(true, 100);
-	
+	cout << endl;	
 }
 
 /* Called after the Game Options are confirmed and sets up the game.
@@ -348,7 +304,6 @@ void LeaderCreation(bool isAI, int pointTotal)
 	int v1;//, v2, v3;
 	if (isAI)
 	{
-		//srand(time(NULL));	//Required for actual randomness. Sets a new random seed.
 		for (int i = 0; i < 5; i++)
 		{
 			// rand() % 'x' limits the number to numbers between 0 - (n-1)
